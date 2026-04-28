@@ -49,7 +49,7 @@ public class FileExplorerService {
         return items;
     }
 
-    private FileItem toFileItem(Path path, Consumer<Path> onNavigate) {
+    public FileItem toFileItem(Path path, Consumer<Path> onNavigate) {
         try {
             BasicFileAttributes attrs = Files.readAttributes(path, BasicFileAttributes.class);
             String name = path.getFileName().toString().toLowerCase();

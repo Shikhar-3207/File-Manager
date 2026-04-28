@@ -29,6 +29,7 @@ public class ModernFileManagerUI {
   private JButton undoButton;
   private JComboBox<SortMode> sortComboBox;
   private JTextField searchField;
+  private JCheckBox recursiveSearchCheck;
   private Path currentPath;
   private Path clipboardPath;
   private boolean isCutOperation;
@@ -174,6 +175,18 @@ public class ModernFileManagerUI {
           }
         });
 
+    recursiveSearchCheck = new JCheckBox("Recursive");
+    recursiveSearchCheck.setOpaque(false);
+    recursiveSearchCheck.setForeground(Color.WHITE);
+    recursiveSearchCheck.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+    recursiveSearchCheck.addActionListener(e -> {
+      String query = searchField.getText().trim();
+      if (!query.isEmpty() && !query.equals("Search files...")) {
+        performSearch(query);
+      }
+    });
+
+    rightTop.add(recursiveSearchCheck);
     rightTop.add(sortComboBox);
     rightTop.add(undoButton);
     rightTop.add(searchField);
@@ -312,7 +325,7 @@ public class ModernFileManagerUI {
     searchWorker = new SwingWorker<>() {
       @Override
       protected List<FileItem> doInBackground() {
-        return searchService.search(currentPath, query, null, 0);
+        return searchService.search(currentPath, query, recursiveSearchCheck.isSelected(), ModernFileManagerUI.this::navigateTo);
       }
 
       @Override
@@ -420,7 +433,14 @@ public class ModernFileManagerUI {
     btn.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 10));
     btn.setHorizontalAlignment(SwingConstants.LEFT);
 
-    btn.addActionListener(e -> navigateTo(Paths.get(path)));
+    btn.addActionListener(e -> {
+      Path p = Paths.get(path);
+      if (Files.isDirectory(p)) {
+        navigateTo(p);
+      } else if (Files.exists(p)) {
+        openFile(service.toFileItem(p, this::navigateTo));
+      }
+    });
 
     if (isFavorite) {
       JPopupMenu sidebarMenu = new JPopupMenu();
